@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Garima Srivastava — Data Analyst</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Syne:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --bg:      #04080f;
+      --bg2:     #070c16;
+      --bg3:     #0b1120;
+      --cyan:    #00d4ff;
+      --cyan2:   #00ffe0;
+      --dim:     rgba(0,212,255,0.08);
+      --border:  rgba(0,212,255,0.15);
+      --text:    #dce8f0;
+      --muted:   #5a7a8a;
+      --card:    rgba(10,18,35,0.85);
+      --glow:    0 0 30px rgba(0,212,255,0.18);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Cursor */
+    #cursor {
+      position: fixed; width: 10px; height: 10px;
+      background: var(--cyan); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: transform 0.08s ease;
+    }
+    #cursor-ring {
+      position: fixed; width: 36px; height: 36px;
+      border: 1px solid rgba(0,212,255,0.5); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: all 0.18s ease;
+    }
+
+    #canvas-bg {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; opacity: 0.4;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.3rem 6vw;
+      background: rgba(4,8,15,0.82);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 600;
+      color: var(--cyan); text-decoration: none; letter-spacing: 0.05em;
+    }
+    .nav-logo span { color: var(--text); font-weight: 300; }
+    .nav-links { display: flex; gap: 2.8rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none; transition: color 0.25s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 1px; background: var(--cyan); transition: width 0.3s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-right { display: flex; gap: 0.8rem; align-items: center; }
+    .icon-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--muted); text-decoration: none;
+      transition: all 0.25s;
+    }
+    .icon-btn:hover { border-color: var(--cyan); color: var(--cyan); background: var(--dim); }
+    .icon-btn svg { width: 15px; height: 15px; fill: currentColor; }
+    .btn-cyan {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      padding: 0.85rem 2.2rem;
+      background: var(--cyan); color: #04080f;
+      font-family: 'Syne', sans-serif; font-weight: 600;
+      font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+      text-decoration: none; border-radius: 2px; transition: all 0.25s;
+      border: none; cursor: pointer;
+    }
+    .btn-cyan:hover {
+      background: var(--cyan2); transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(0,212,255,0.3);
+    }
+    .btn-cyan svg { width: 14px; height: 14px; fill: currentColor; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      padding: 0.85rem 2.2rem; border: 1px solid var(--border);
+      color: var(--text); font-family: 'Syne', sans-serif;
+      font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+      text-decoration: none; border-radius: 2px; transition: all 0.25s;
+    }
+    .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); background: var(--dim); }
+    .btn-ghost svg { width: 14px; height: 14px; fill: currentColor; }
+
+    /* HERO */
+    #hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 10rem 6vw 6rem; z-index: 1; overflow: hidden;
+    }
+    .hero-inner { max-width: 860px; }
+    .hero-line {
+      display: flex; align-items: center; gap: 1.2rem;
+      margin-bottom: 1.8rem;
+      animation: fadeSlide 0.8s ease both;
+    }
+    .hero-line-bar { width: 40px; height: 1px; background: var(--cyan); }
+    .hero-greeting {
+      font-size: 0.75rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--cyan);
+    }
+    .hero-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.8rem, 8.5vw, 7.8rem);
+      font-weight: 700; line-height: 0.95; letter-spacing: -0.02em;
+      animation: fadeSlide 0.9s 0.1s ease both;
+    }
+    .hero-name .italic { font-style: italic; color: var(--cyan); }
+    .hero-role {
+      margin-top: 1.8rem; font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--muted); display: flex; align-items: center; gap: 0.8rem;
+      animation: fadeSlide 1s 0.2s ease both;
+    }
+    .hero-role-text { color: var(--text); }
+    #typewriter {
+      color: var(--cyan); border-right: 2px solid var(--cyan);
+      padding-right: 3px; animation: blink 0.8s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{border-color:var(--cyan)} 50%{border-color:transparent} }
+    .hero-desc {
+      margin-top: 1.6rem; max-width: 560px;
+      font-size: 1.05rem; line-height: 1.8; color: #7a9cad;
+      animation: fadeSlide 1s 0.3s ease both;
+    }
+    .hero-actions {
+      margin-top: 3rem; display: flex; gap: 1.2rem; flex-wrap: wrap;
+      animation: fadeSlide 1s 0.4s ease both;
+    }
+    .hero-stats {
+      position: absolute; right: 6vw; bottom: 6rem;
+      display: flex; flex-direction: column; gap: 2rem;
+      animation: fadeSlide 1s 0.5s ease both;
+    }
+    .stat { text-align: right; }
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem; font-weight: 600; color: var(--cyan); line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.68rem; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--muted); margin-top: 0.3rem;
+    }
+    @keyframes fadeSlide {
+      from { opacity:0; transform: translateY(28px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* SECTION */
+    .section { position: relative; z-index: 1; padding: 7rem 6vw; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-header { margin-bottom: 4rem; }
+    .s-label {
+      display: flex; align-items: center; gap: 1rem;
+      font-size: 0.7rem; letter-spacing: 0.25em;
+      text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem;
+    }
+    .s-label::after { content: ''; flex: 1; max-width: 80px; height: 1px; background: var(--border); }
+    .s-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 4vw, 3.5rem); font-weight: 600; line-height: 1.1;
+    }
+    .s-title em { font-style: italic; color: var(--cyan); }
+
+    /* ABOUT */
+    #about { background: var(--bg2); border-top: 1px solid var(--border); }
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1.5fr;
+      gap: 6rem; align-items: start;
+    }
+    .photo-card { position: sticky; top: 8rem; }
+    .photo-frame {
+      aspect-ratio: 4/5; background: var(--bg3);
+      border: 1px solid var(--border); border-radius: 4px;
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 1rem;
+      color: var(--muted); font-size: 0.75rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .photo-frame svg { width: 44px; height: 44px; fill: var(--border); }
+    .photo-frame::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0,212,255,0.04) 0%, transparent 60%);
+    }
+    .fc { position: absolute; width: 20px; height: 20px; border-color: var(--cyan); border-style: solid; opacity: 0.6; }
+    .fc-tl { top:12px;left:12px;border-width:1px 0 0 1px; }
+    .fc-tr { top:12px;right:12px;border-width:1px 1px 0 0; }
+    .fc-bl { bottom:12px;left:12px;border-width:0 0 1px 1px; }
+    .fc-br { bottom:12px;right:12px;border-width:0 1px 1px 0; }
+    .contact-chips { margin-top: 1.6rem; display: flex; flex-direction: column; gap: 0.7rem; }
+    .chip {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.65rem 1rem; background: var(--bg3);
+      border: 1px solid var(--border); border-radius: 4px;
+      font-size: 0.8rem; color: var(--muted); text-decoration: none; transition: all 0.25s;
+    }
+    .chip:hover { border-color: var(--cyan); color: var(--cyan); }
+    .chip svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+    .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .about-content p {
+      font-size: 1rem; line-height: 1.9; color: #8aacbc; margin-bottom: 1.4rem;
+    }
+    .about-content p strong { color: var(--text); font-weight: 500; }
+    .about-highlight {
+      margin: 2.5rem 0; padding: 1.6rem 2rem;
+      border-left: 2px solid var(--cyan); background: var(--dim);
+      border-radius: 0 4px 4px 0;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem; font-style: italic; color: var(--text); line-height: 1.5;
+    }
+    .about-tags { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 2rem; }
+    .about-tag {
+      font-size: 0.73rem; letter-spacing: 0.1em;
+      padding: 0.3rem 0.9rem; border: 1px solid var(--border);
+      border-radius: 40px; color: var(--muted); text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .about-tag:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* SKILLS */
+    #skills { border-top: 1px solid var(--border); }
+    .skills-layout {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 5rem; align-items: start;
+    }
+    .skill-category { margin-bottom: 3rem; }
+    .skill-cat-title {
+      font-size: 0.7rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--cyan); margin-bottom: 1.5rem;
+    }
+    .skill-bar-item { margin-bottom: 1.4rem; }
+    .skill-bar-top { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+    .skill-bar-name { font-size: 0.85rem; color: var(--text); letter-spacing: 0.04em; }
+    .skill-bar-pct { font-size: 0.75rem; color: var(--muted); }
+    .skill-bar-track {
+      height: 3px; background: rgba(0,212,255,0.1);
+      border-radius: 2px; overflow: hidden;
+    }
+    .skill-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--cyan2));
+      border-radius: 2px; width: 0;
+      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .tools-grid { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1rem; }
+    .tool-bubble {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.55rem 1.1rem; background: var(--bg3);
+      border: 1px solid var(--border); border-radius: 40px;
+      font-size: 0.8rem; color: var(--muted); transition: all 0.25s;
+    }
+    .tool-bubble:hover {
+      border-color: var(--cyan); color: var(--cyan);
+      background: var(--dim); transform: translateY(-2px);
+    }
+    .tool-bubble .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); opacity: 0.5; }
+
+    /* PROJECTS */
+    #projects { background: var(--bg2); border-top: 1px solid var(--border); }
+    .projects-list { display: flex; flex-direction: column; gap: 2.5rem; margin-top: 4rem; }
+    .proj-card {
+      display: grid; grid-template-columns: 90px 1fr;
+      gap: 2.5rem; padding: 2.5rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; backdrop-filter: blur(12px);
+      transition: all 0.3s;
+    }
+    .proj-card:hover {
+      border-color: var(--cyan); box-shadow: var(--glow);
+      transform: translateX(6px);
+    }
+    .proj-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.5rem; font-weight: 300;
+      color: rgba(0,212,255,0.12); line-height: 1; text-align: right;
+      padding-top: 0.2rem; transition: color 0.3s;
+    }
+    .proj-card:hover .proj-num { color: rgba(0,212,255,0.28); }
+    .proj-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .proj-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.7rem; font-weight: 600; line-height: 1.2;
+    }
+    .proj-link {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none;
+      border: 1px solid var(--border); padding: 0.4rem 0.9rem;
+      border-radius: 3px; white-space: nowrap; transition: all 0.25s;
+      flex-shrink: 0; margin-left: 1rem;
+    }
+    .proj-link:hover { border-color: var(--cyan); color: var(--cyan); background: var(--dim); }
+    .proj-link svg { width: 12px; height: 12px; fill: currentColor; }
+    .proj-desc { font-size: 0.92rem; color: #6a8c9c; line-height: 1.75; margin-bottom: 1.4rem; }
+    .proj-features { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1.5rem; margin-bottom: 1.6rem; }
+    .proj-feat {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      font-size: 0.82rem; color: #7a9cac; line-height: 1.5;
+    }
+    .proj-feat::before { content: '▸'; color: var(--cyan); font-size: 0.7rem; margin-top: 0.2rem; flex-shrink: 0; }
+    .proj-stack { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .stag {
+      font-size: 0.68rem; letter-spacing: 0.08em;
+      padding: 0.2rem 0.65rem;
+      background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.18);
+      border-radius: 3px; color: var(--cyan);
+    }
+
+    /* CONTACT */
+    #contact { border-top: 1px solid var(--border); }
+    .contact-inner {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6rem; align-items: center;
+    }
+    .contact-desc { margin-top: 1.5rem; font-size: 1rem; line-height: 1.8; color: var(--muted); }
+    .contact-links-row { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 2.5rem; }
+    .clink {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.65rem 1.2rem; border: 1px solid var(--border);
+      border-radius: 4px; color: var(--muted); text-decoration: none;
+      font-size: 0.78rem; letter-spacing: 0.06em; transition: all 0.25s;
+    }
+    .clink:hover { border-color: var(--cyan); color: var(--cyan); background: var(--dim); }
+    .clink svg { width: 14px; height: 14px; fill: currentColor; }
+    .contact-form { display: flex; flex-direction: column; gap: 1.2rem; }
+    .cf-row { display: flex; flex-direction: column; gap: 0.4rem; }
+    .cf-label { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .cf-input, .cf-textarea {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 3px; color: var(--text); font-family: 'Syne', sans-serif;
+      font-size: 0.9rem; padding: 0.8rem 1.1rem; transition: border-color 0.25s;
+      outline: none; resize: none;
+    }
+    .cf-input:focus, .cf-textarea:focus { border-color: var(--cyan); }
+    .cf-textarea { min-height: 110px; }
+
+    /* FOOTER */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border); padding: 2.2rem 6vw;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    footer p { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.1em; }
+    footer span { color: var(--cyan); }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a {
+      font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--cyan); }
+
+    /* REVEAL */
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.75s ease, transform 0.75s ease; }
+    .reveal.left { transform: translateX(-32px); }
+    .reveal.right { transform: translateX(32px); }
+    .reveal.visible { opacity: 1 !important; transform: none !important; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .about-grid, .skills-layout, .contact-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .photo-card { position: static; max-width: 280px; }
+      .hero-stats { display: none; }
+      .proj-card { grid-template-columns: 1fr; gap: 1rem; }
+      .proj-num { font-size: 2rem; text-align: left; }
+      .proj-features { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 600px) {
+      .section { padding: 5rem 5vw; }
+      .proj-card { padding: 1.6rem; }
+      .proj-header { flex-direction: column; gap: 0.8rem; }
+      .proj-link { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="canvas-bg"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">GS<span> / Portfolio</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="https://github.com/garimasrivastava01" target="_blank" class="icon-btn" title="GitHub">
+      <svg viewBox="0 0 24 24"><path d="M12 0c-6.63 0-12 5.37-12 12 0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 013-.4c1.02.005 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+    </a>
+    <a href="https://www.linkedin.com/in/garima-srivastava-9b1b56382" target="_blank" class="icon-btn" title="LinkedIn">
+      <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.27c-.97 0-1.75-.79-1.75-1.76s.78-1.75 1.75-1.75 1.75.78 1.75 1.75-.78 1.76-1.75 1.76zm13.5 11.27h-3v-5.6c0-1.34-.03-3.06-1.86-3.06-1.87 0-2.16 1.46-2.16 2.97v5.69h-3v-10h2.88v1.37h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.59v5.6z"/></svg>
+    </a>
+    <a href="mailto:srivastavagari0914@gmail.com" class="btn-cyan" style="padding:0.5rem 1.4rem;font-size:0.72rem;">
+      Hire Me
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-line">
+      <div class="hero-line-bar"></div>
+      <span class="hero-greeting">Welcome to my portfolio</span>
+    </div>
+    <h1 class="hero-name">
+      Garima<br/>
+      <span class="italic">Srivastava</span>
+    </h1>
+    <div class="hero-role">
+      <span class="hero-role-text">I am a</span>
+      <span id="typewriter">Data Analyst</span>
+    </div>
+    <p class="hero-desc">
+      Transforming raw, complex data into clear insights and intelligent applications.
+      I bridge data analysis and full-stack development — making data not just readable, but actionable.
+    </p>
+    <div class="hero-actions">
+      <a href="#projects" class="btn-cyan">
+        View Projects
+        <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      </a>
+      <a href="mailto:srivastavagari0914@gmail.com" class="btn-ghost">
+        Get In Touch
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">3+</div><div class="stat-label">Projects Built</div></div>
+    <div class="stat"><div class="stat-num">36+</div><div class="stat-label">Skills Tracked</div></div>
+    <div class="stat"><div class="stat-num">288</div><div class="stat-label">Jobs Analyzed</div></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="section">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <p class="s-label">Who I Am</p>
+      <h2 class="s-title">About <em>Me</em></h2>
+    </div>
+    <div class="about-grid">
+      <div class="photo-card reveal left">
+        <div class="photo-frame">
+          <div class="fc fc-tl"></div><div class="fc fc-tr"></div>
+          <div class="fc fc-bl"></div><div class="fc fc-br"></div>
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          <span>Your Photo Here</span>
+        </div>
+        <div class="contact-chips">
+          <a href="mailto:srivastavagari0914@gmail.com" class="chip">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span>srivastavagari0914@gmail.com</span>
+          </a>
+          <a href="tel:7839262845" class="chip">
+            <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            <span>+91 7839262845</span>
+          </a>
+          <a href="https://github.com/garimasrivastava01" target="_blank" class="chip">
+            <svg viewBox="0 0 24 24"><path d="M12 0c-6.63 0-12 5.37-12 12 0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 013-.4c1.02.005 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span>garimasrivastava01</span>
+          </a>
+          <a href="https://www.linkedin.com/in/garima-srivastava-9b1b56382" target="_blank" class="chip">
+            <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.27c-.97 0-1.75-.79-1.75-1.76s.78-1.75 1.75-1.75 1.75.78 1.75 1.75-.78 1.76-1.75 1.76zm13.5 11.27h-3v-5.6c0-1.34-.03-3.06-1.86-3.06-1.87 0-2.16 1.46-2.16 2.97v5.69h-3v-10h2.88v1.37h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.59v5.6z"/></svg>
+            <span>garima-srivastava</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="about-content reveal right">
+        <p>
+          I am <strong>Garima Srivastava</strong>, a passionate <strong>Data Analyst &amp; Web Developer</strong> with a strong foundation in Python-based solutions, statistical analysis, and data storytelling. I specialize in converting complex, messy datasets into clean, meaningful insights that drive real decisions.
+        </p>
+        <div class="about-highlight">
+          "I don't just analyze data — I build the tools that make data analysis effortless."
+        </div>
+        <p>
+          My expertise spans the full data lifecycle: from <strong>web scraping and data collection</strong> to <strong>cleaning, analysis, and visualization</strong>. I build intelligent full-stack web applications that combine data engineering with user-friendly interfaces, ensuring the output is always clear and impactful.
+        </p>
+        <p>
+          Beyond core data work, I am actively expanding into <strong>Artificial Intelligence and Machine Learning</strong> — exploring supervised learning algorithms, neural network fundamentals, and how AI can automate and elevate data-driven workflows. I believe the future of data analytics is deeply intertwined with intelligent automation.
+        </p>
+        <p>
+          I believe great analysis is not just about numbers — it is about <strong>clarity, communication, and impact</strong>. Every dataset has a story, and I enjoy finding and telling it.
+        </p>
+        <div class="about-tags">
+          <span class="about-tag">Data Analysis</span>
+          <span class="about-tag">Python</span>
+          <span class="about-tag">Data Visualization</span>
+          <span class="about-tag">Flask</span>
+          <span class="about-tag">Web Scraping</span>
+          <span class="about-tag">AI / ML</span>
+          <span class="about-tag">Problem Solving</span>
+          <span class="about-tag">Storytelling with Data</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills" class="section">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <p class="s-label">What I Know</p>
+      <h2 class="s-title">Skills &amp; <em>Expertise</em></h2>
+    </div>
+    <div class="skills-layout">
+      <div class="reveal left">
+        <div class="skill-category">
+          <p class="skill-cat-title">Programming &amp; Data</p>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">Python</span><span class="skill-bar-pct">90%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="90"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">Pandas &amp; NumPy</span><span class="skill-bar-pct">85%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="85"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">Data Cleaning &amp; EDA</span><span class="skill-bar-pct">88%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="88"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">Matplotlib &amp; Seaborn</span><span class="skill-bar-pct">82%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="82"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">Web Scraping (BS4)</span><span class="skill-bar-pct">80%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="80"></div></div>
+          </div>
+        </div>
+        <div class="skill-category">
+          <p class="skill-cat-title">Web Development</p>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">HTML5 &amp; CSS3</span><span class="skill-bar-pct">85%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="85"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">Flask</span><span class="skill-bar-pct">78%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="78"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-top"><span class="skill-bar-name">JavaScript</span><span class="skill-bar-pct">70%</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="70"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal right">
+        <div class="skill-category">
+          <p class="skill-cat-title">AI &amp; Machine Learning</p>
+          <div class="tools-grid">
+            <div class="tool-bubble"><div class="dot"></div>Machine Learning Basics</div>
+            <div class="tool-bubble"><div class="dot"></div>Scikit-learn</div>
+            <div class="tool-bubble"><div class="dot"></div>Neural Networks</div>
+            <div class="tool-bubble"><div class="dot"></div>NLP Fundamentals</div>
+            <div class="tool-bubble"><div class="dot"></div>Regression Analysis</div>
+            <div class="tool-bubble"><div class="dot"></div>Classification Models</div>
+            <div class="tool-bubble"><div class="dot"></div>Feature Engineering</div>
+            <div class="tool-bubble"><div class="dot"></div>Data Preprocessing</div>
+          </div>
+        </div>
+        <div class="skill-category" style="margin-top:2.5rem;">
+          <p class="skill-cat-title">Tools &amp; Platforms</p>
+          <div class="tools-grid">
+            <div class="tool-bubble"><div class="dot"></div>Git &amp; GitHub</div>
+            <div class="tool-bubble"><div class="dot"></div>Jupyter Notebook</div>
+            <div class="tool-bubble"><div class="dot"></div>VS Code</div>
+            <div class="tool-bubble"><div class="dot"></div>Kaggle</div>
+            <div class="tool-bubble"><div class="dot"></div>REST APIs</div>
+            <div class="tool-bubble"><div class="dot"></div>SQL (Basics)</div>
+          </div>
+        </div>
+        <div class="skill-category" style="margin-top:2.5rem;">
+          <p class="skill-cat-title">Soft Skills</p>
+          <div class="tools-grid">
+            <div class="tool-bubble"><div class="dot"></div>Analytical Thinking</div>
+            <div class="tool-bubble"><div class="dot"></div>Problem Solving</div>
+            <div class="tool-bubble"><div class="dot"></div>Data Storytelling</div>
+            <div class="tool-bubble"><div class="dot"></div>Attention to Detail</div>
+            <div class="tool-bubble"><div class="dot"></div>Self-Learning</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" class="section">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <p class="s-label">My Work</p>
+      <h2 class="s-title">Featured <em>Projects</em></h2>
+    </div>
+    <div class="projects-list">
+
+      <div class="proj-card reveal">
+        <div class="proj-num">01</div>
+        <div>
+          <div class="proj-header">
+            <h3 class="proj-title">Tech Skills Demand Checker</h3>
+            <a href="https://github.com/garimasrivastava01/Tech-Skills-Demand-Checker" target="_blank" class="proj-link">
+              <svg viewBox="0 0 24 24"><path d="M12 0c-6.63 0-12 5.37-12 12 0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 013-.4c1.02.005 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </a>
+          </div>
+          <p class="proj-desc">A full-stack Python web application that intelligently scrapes 7 major job platforms — Naukri, Indeed, LinkedIn, and more — and analyzes 36+ technical skills to map real-time market demand. Designed to help students and developers make smarter, data-driven career decisions.</p>
+          <div class="proj-features">
+            <span class="proj-feat">Multi-platform scraping across 7 job portals</span>
+            <span class="proj-feat">288 jobs analyzed for skills demand</span>
+            <span class="proj-feat">Real-time skills analysis engine</span>
+            <span class="proj-feat">Dashboard showing Top 5 skills ranking</span>
+            <span class="proj-feat">User auth + OTP password recovery</span>
+            <span class="proj-feat">Mobile-responsive UI design</span>
+          </div>
+          <div class="proj-stack">
+            <span class="stag">Python</span><span class="stag">Flask</span>
+            <span class="stag">BeautifulSoup4</span><span class="stag">HTML5/CSS3</span>
+            <span class="stag">JavaScript</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="proj-card reveal">
+        <div class="proj-num">02</div>
+        <div>
+          <div class="proj-header">
+            <h3 class="proj-title">COVID-19 Data Cleanup &amp; Visualization</h3>
+            <a href="https://github.com/garimasrivastava01/covid-19-data-cleanup-visualizationn" target="_blank" class="proj-link">
+              <svg viewBox="0 0 24 24"><path d="M12 0c-6.63 0-12 5.37-12 12 0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 013-.4c1.02.005 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </a>
+          </div>
+          <p class="proj-desc">End-to-end data analysis project using real-world COVID-19 datasets from Kaggle. Demonstrates a complete data cleaning pipeline — handling missing values, inconsistent formats, and duplicates — followed by impactful visual storytelling using Python libraries.</p>
+          <div class="proj-features">
+            <span class="proj-feat">Missing values &amp; duplicates cleaned with Pandas</span>
+            <span class="proj-feat">Datetime formatting &amp; column standardization</span>
+            <span class="proj-feat">Line chart: COVID case trends over time</span>
+            <span class="proj-feat">Heatmap: intensity across countries &amp; dates</span>
+          </div>
+          <div class="proj-stack">
+            <span class="stag">Python</span><span class="stag">Pandas</span>
+            <span class="stag">Matplotlib</span><span class="stag">Seaborn</span>
+            <span class="stag">Kaggle Dataset</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="proj-card reveal">
+        <div class="proj-num">03</div>
+        <div>
+          <div class="proj-header">
+            <h3 class="proj-title">COVID-19 Case Trend Analysis Dashboard</h3>
+            <a href="https://github.com/garimasrivastava01/COVID-19-Trend-Analysis-Dashboard" target="_blank" class="proj-link">
+              <svg viewBox="0 0 24 24"><path d="M12 0c-6.63 0-12 5.37-12 12 0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 013-.4c1.02.005 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </a>
+          </div>
+          <p class="proj-desc">A time-series visualization dashboard built to analyze COVID-19 case trends and communicate critical data insights through comparative charting. Focused on identifying growth patterns clearly and presenting data in a clean, dashboard-style layout.</p>
+          <div class="proj-features">
+            <span class="proj-feat">Time-series analysis of confirmed cases</span>
+            <span class="proj-feat">Growth pattern identification across regions</span>
+            <span class="proj-feat">Multi-country comparison visualizations</span>
+            <span class="proj-feat">Clean dashboard-style presentation</span>
+          </div>
+          <div class="proj-stack">
+            <span class="stag">Python</span><span class="stag">Pandas</span>
+            <span class="stag">Matplotlib</span><span class="stag">Seaborn</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="section">
+  <div class="section-inner">
+    <div class="contact-inner">
+      <div class="reveal left">
+        <p class="s-label">Let's Talk</p>
+        <h2 class="s-title">Open to <em>Opportunities</em></h2>
+        <p class="contact-desc">Whether you have a project in mind, a data challenge to solve, or just want to connect — I'd love to hear from you. Let's build something meaningful together.</p>
+        <div class="contact-links-row">
+          <a href="mailto:srivastavagari0914@gmail.com" class="clink">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            Email
+          </a>
+          <a href="https://www.linkedin.com/in/garima-srivastava-9b1b56382" target="_blank" class="clink">
+            <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.27c-.97 0-1.75-.79-1.75-1.76s.78-1.75 1.75-1.75 1.75.78 1.75 1.75-.78 1.76-1.75 1.76zm13.5 11.27h-3v-5.6c0-1.34-.03-3.06-1.86-3.06-1.87 0-2.16 1.46-2.16 2.97v5.69h-3v-10h2.88v1.37h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.59v5.6z"/></svg>
+            LinkedIn
+          </a>
+          <a href="https://github.com/garimasrivastava01" target="_blank" class="clink">
+            <svg viewBox="0 0 24 24"><path d="M12 0c-6.63 0-12 5.37-12 12 0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 013-.4c1.02.005 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.7.82.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            GitHub
+          </a>
+          <a href="tel:7839262845" class="clink">
+            <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            +91 7839262845
+          </a>
+        </div>
+      </div>
+      <div class="reveal right">
+        <div class="contact-form">
+          <div class="cf-row">
+            <label class="cf-label">Your Name</label>
+            <input class="cf-input" type="text" placeholder="Enter your name"/>
+          </div>
+          <div class="cf-row">
+            <label class="cf-label">Email Address</label>
+            <input class="cf-input" type="email" placeholder="your@email.com"/>
+          </div>
+          <div class="cf-row">
+            <label class="cf-label">Message</label>
+            <textarea class="cf-textarea" placeholder="Tell me about your project or opportunity..."></textarea>
+          </div>
+          <a href="mailto:srivastavagari0914@gmail.com" class="btn-cyan" style="justify-content:center;text-align:center;">
+            Send Message
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>&copy; 2025 <span>Garima Srivastava</span>. All rights reserved.</p>
+  <div class="footer-links">
+    <a href="#about">About</a>
+    <a href="#skills">Skills</a>
+    <a href="#projects">Projects</a>
+    <a href="#contact">Contact</a>
+  </div>
+</footer>
+
+<script>
+/* Custom Cursor */
+const cursor=document.getElementById('cursor'), ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursor.style.left=mx+'px'; cursor.style.top=my+'px'; });
+(function animRing(){ rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); })();
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ cursor.style.transform='translate(-50%,-50%) scale(2.2)'; ring.style.transform='translate(-50%,-50%) scale(1.6)'; ring.style.borderColor='var(--cyan)'; });
+  el.addEventListener('mouseleave',()=>{ cursor.style.transform='translate(-50%,-50%) scale(1)'; ring.style.transform='translate(-50%,-50%) scale(1)'; ring.style.borderColor='rgba(0,212,255,0.5)'; });
+});
+
+/* Canvas particles */
+const canvas=document.getElementById('canvas-bg'),ctx=canvas.getContext('2d');
+let W,H,pts=[];
+function resize(){ W=canvas.width=innerWidth; H=canvas.height=innerHeight; }
+resize(); window.addEventListener('resize',resize);
+for(let i=0;i<65;i++) pts.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.4});
+(function draw(){
+  ctx.clearRect(0,0,W,H);
+  for(let p of pts){
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba(0,212,255,0.55)'; ctx.fill();
+  }
+  for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.hypot(dx,dy);
+    if(d<130){ ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y); ctx.strokeStyle=`rgba(0,212,255,${.09*(1-d/130)})`; ctx.lineWidth=.5; ctx.stroke(); }
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* Typewriter */
+const roles=['Data Analyst','Web Developer','Python Developer','Data Storyteller','Problem Solver'];
+let ri=0,ci=0,del=false;
+const tw=document.getElementById('typewriter');
+function type(){
+  const w=roles[ri];
+  if(!del){ tw.textContent=w.slice(0,++ci); if(ci===w.length){del=true;setTimeout(type,2000);return;} }
+  else{ tw.textContent=w.slice(0,--ci); if(ci===0){del=false;ri=(ri+1)%roles.length;} }
+  setTimeout(type,del?60:90);
+}
+type();
+
+/* Scroll Reveal */
+const ro=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('visible');ro.unobserve(e.target);} }),{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+/* Skill bars */
+const bo=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting){ e.target.querySelectorAll('.skill-bar-fill').forEach(b=>b.style.width=b.dataset.width+'%'); bo.unobserve(e.target); } }),{threshold:0.3});
+const sk=document.getElementById('skills'); if(sk) bo.observe(sk);
+</script>
+</body>
+</html>
